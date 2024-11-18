@@ -1,25 +1,24 @@
-import { useEffect, useState, useRef } from 'react';
-import './Style.css';
-import Lixeira from '../../assets/trash.svg.svg';
-import Editar from '../../assets/edit.svg.svg';
-import api from '../../servises/api';
+import { useEffect, useState, useRef } from "react";
+import "./Style.css";
+import Lixeira from "../../assets/trash.svg.svg";
+import Editar from "../../assets/edit.svg.svg";
+import api from "../../servises/api";
 
 function Home() {
   const [tarefas, setTarefas] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentTarefa, setCurrentTarefa] = useState(null);
-  
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+
   const inputNome = useRef();
   const inputCusto = useRef();
   const inputDataLimite = useRef();
-  
+
   async function getLista() {
-    const tarefasFromApi = await api.get('/lista');
+    const tarefasFromApi = await api.get("/lista");
     setTarefas(tarefasFromApi.data);
   }
 
   async function createLista() {
-    await api.post('/lista', {
+    await api.post("/lista", {
       nome: inputNome.current.value,
       custo: inputCusto.current.value,
       datalimite: inputDataLimite.current.value,
@@ -41,40 +40,21 @@ function Home() {
     }
   }
 
-  function openEditPopup(tarefa) {
-    setCurrentTarefa(tarefa);
-    setIsEditing(true);
+  function handleDragStart(index) {
+    setDraggedItemIndex(index);
   }
 
-  function closeEditPopup() {
-    setIsEditing(false);
-    setCurrentTarefa(null);
+  function handleDragOver(e) {
+    e.preventDefault();
   }
 
-  async function saveEdit() {
-    if (currentTarefa) {
-      try {
-        await api.put(`/lista/${currentTarefa.id}`, {
-          nome: currentTarefa.nome,
-          custo: currentTarefa.custo,
-          datalimite: currentTarefa.datalimite,
-        });
-        alert("Item atualizado com sucesso!");
-        closeEditPopup();
-        getLista();
-      } catch (error) {
-        console.error("Erro ao atualizar o item:", error);
-        alert("Houve um erro ao tentar atualizar o item.");
-      }
-    }
-  }
+  function handleDrop(index) {
+    const updatedTarefas = [...tarefas];
+    const draggedItem = updatedTarefas.splice(draggedItemIndex, 1)[0];
+    updatedTarefas.splice(index, 0, draggedItem);
 
-  function handleEditChange(e) {
-    const { name, value } = e.target;
-    setCurrentTarefa((prevTarefa) => ({
-      ...prevTarefa,
-      [name]: value,
-    }));
+    setTarefas(updatedTarefas);
+    setDraggedItemIndex(null);
   }
 
   useEffect(() => {
@@ -82,17 +62,26 @@ function Home() {
   }, []);
 
   return (
-    <div className='Container'>
+    <div className="Container">
       <form>
         <h1>Cadastro de Tarefas</h1>
-        <input placeholder='Nome da Tarefa' name='Nome da Tarefa' type='text' ref={inputNome} />
-        <input placeholder='Custo' name='Custo' type='number' ref={inputCusto} />
-        <input placeholder='Data Limite' name='Data Limite' type='date' ref={inputDataLimite} />
-        <button type='button' onClick={createLista}>Cadastrar</button>
+        <input placeholder="Nome da Tarefa" name="Nome da Tarefa" type="text" ref={inputNome} />
+        <input placeholder="Custo" name="Custo" type="number" ref={inputCusto} />
+        <input placeholder="Data Limite" name="Data Limite" type="date" ref={inputDataLimite} />
+        <button type="button" onClick={createLista}>
+          Cadastrar
+        </button>
       </form>
 
-      {tarefas.map((tarefa) => (
-        <div key={tarefa.id} className='card'>
+      {tarefas.map((tarefa, index) => (
+        <div
+          key={tarefa.id}
+          className="card"
+          draggable
+          onDragStart={() => handleDragStart(index)}
+          onDragOver={handleDragOver}
+          onDrop={() => handleDrop(index)}
+        >
           <div>
             <p>Nome da Tarefa: {tarefa.nome}</p>
             <p>Custo R$: {tarefa.custo}</p>
@@ -100,51 +89,12 @@ function Home() {
             <button onClick={() => deleteLista(tarefa.id)}>
               <img src={Lixeira} alt="Deletar" />
             </button>
-            <button onClick={() => openEditPopup(tarefa)}>
+            <button>
               <img src={Editar} alt="Editar" />
             </button>
           </div>
         </div>
       ))}
-
-      {isEditing && (
-        <div className="popup">
-          <div className="popup-content">
-            <h2>Editar Tarefa</h2>
-            <form onSubmit={(e) => { e.preventDefault(); saveEdit(); }}>
-              <label>
-                Nome:
-                <input
-                  type="text"
-                  name="nome"
-                  value={currentTarefa.nome}
-                  onChange={handleEditChange}
-                />
-              </label>
-              <label>
-                Custo:
-                <input
-                  type="number"
-                  name="custo"
-                  value={currentTarefa.custo}
-                  onChange={handleEditChange}
-                />
-              </label>
-              <label>
-                Data Limite:
-                <input
-                  type="date"
-                  name="datalimite"
-                  value={currentTarefa.datalimite}
-                  onChange={handleEditChange}
-                />
-              </label>
-              <button type="submit">Salvar</button>
-              <button type="button" onClick={closeEditPopup}>Cancelar</button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

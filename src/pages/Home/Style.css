@@ -79,4 +79,22 @@ form input {
 .card button:hover {
   opacity: 0.8;
 }
+.card {
+  margin: 10px 0;
+  padding: 15px;
+  background: #48456c;
+  border: 1px solid #48456c;
+  border-radius: 8px;
+  cursor: grab;
+  transition: background 0.3s;
+}
+
+.card:active {
+  cursor: grabbing;
+}
+
+.card.dragging {
+  opacity: 0.5;
+  background: #eaeaea;
+}
 
