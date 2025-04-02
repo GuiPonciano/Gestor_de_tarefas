@@ -4,7 +4,10 @@ Projeto feito apartir das aulas do professor https://www.youtube.com/@canaldevcl
 
 ## Foi utilizado neste projeto 
 - React + vite
-
+  - HTML
+  - CSS
+  - Java Script
+    
 ## Ele conta com um Crud 
 que possibilita que as informações possão ser alocadas, editadas e excluidas no back-end;
 
